@@ -2,17 +2,19 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import io
+import os
 
 # Função para salvar DataFrame em um arquivo Excel em memória
-def to_excel(df):
+def to_excel(df, cidade):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         # Adicionar título
         workbook  = writer.book
         worksheet = workbook.add_worksheet('Romaneio de Cargas')
         
-        # Escrever o título na primeira linha
-        worksheet.merge_range('A1:I1', 'Romaneio de Cargas Tel Ribeirão Preto', workbook.add_format({'align': 'center', 'bold': True, 'font_size': 14}))
+        # Escrever o título na primeira linha, incluindo o nome da cidade
+        titulo = f'Romaneio de Cargas Tel {cidade}'
+        worksheet.merge_range('A1:I1', titulo, workbook.add_format({'align': 'center', 'bold': True, 'font_size': 14}))
 
         # Adicionar os dados do DataFrame começando da segunda linha
         df.to_excel(writer, index=False, sheet_name='Romaneio de Cargas', startrow=1)
@@ -28,12 +30,15 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
+# Configuração da página
+st.set_page_config(page_title="Romaneio de Cargas de Envio", page_icon="🚚", layout='wide', initial_sidebar_state="expanded")
+
 def main():
-    st.set_page_config(page_title="Romaneio de Cargas de Envio - Ribeirão Preto", page_icon="🚚", layout='wide', initial_sidebar_state="expanded")
+    st.sidebar.header("Romaneio de Cargas Envio Tel")
     
-    st.sidebar.header("Romaneio de Cargas Envio Tel Ribeirão Preto")
-    st.sidebar.image("romaneio.jpg", use_column_width=True)
-    
+    # Caminho da imagem na mesma pasta do arquivo Python
+    image_path = os.path.join(os.path.dirname(__file__), "romaneio.jpg")
+    st.sidebar.image(image_path, use_column_width=True)
     
     st.title("Gerenciamento de Romaneio de Cargas")
 
@@ -107,7 +112,7 @@ def main():
     # Botão para baixar o arquivo CSV
     st.header("Baixar Arquivo de Transferências")
     if not df.empty:
-        excel_data = to_excel(df)
+        excel_data = to_excel(df, cidade_origem)
         if st.download_button(
             label="Baixar CSV para Impressão",
             data=excel_data,
@@ -121,3 +126,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
